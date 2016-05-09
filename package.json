@@ -1,0 +1,11 @@
+{
+  "name": "shopease",
+  "version": "1.0.0",
+  "description": "App for keeping track of items to buy at stores",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Glenn Martin",
+  "license": "GPL-3.0"
+}
