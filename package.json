@@ -7,5 +7,10 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Glenn Martin",
-  "license": "GPL-3.0"
+  "license": "GPL-3.0",
+  "dependencies": {
+    "babel-register": "^6.8.0",
+    "express": "^4.13.4",
+    "mongodb": "^2.1.18"
+  }
 }
