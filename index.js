@@ -1,3 +1,12 @@
+/**
+ *  NOTE: despite using babel, still using Node standard module import/export
+ *
+ *  requires mongoDB to be running. Can configure the url/db, or make it
+ *  localhost:27017/shopease
+ *  -u shopease
+ *  -p #s3cuR!tY
+ */
+
 ///////////////////
 // modules
 ///////////////////
@@ -6,19 +15,18 @@ const express = require('express');
 const app = express();
 const logger = require('./utilities/logger');
 const morgan = require('morgan');
+var db = require('./utilities/db');
 
 ///////////////////
 // settings
 ///////////////////
-var ENV = process.env.NODE_ENV || 'production';
-// listens to port 8080 unless in development mode, when it's port 3001
-var PORT = process.env.PORT || (ENV === 'development' ? 3001 : 8080);
+const config = require('./utilities/config');
 
 ///////////////////
 // middleware and routes
 ///////////////////
 // logging
-app.use(morgan(ENV === 'development' ? 'dev' : 'combined',{ "stream": logger.stream }));
+app.use(morgan(config.env === 'development' ? 'dev' : 'combined',{ "stream": logger.stream }));
 // temp
 app.get('/', function (req, res) {
   res.send('Hello World');
@@ -28,9 +36,20 @@ app.get('/', function (req, res) {
 // start app
 ///////////////////
 try {
-  var server = app.listen(PORT, function () {
-    logger.info('Travelocity Brand Guide listening on port ' + PORT);
-  });
+  var server;
+  //db.onReady(function () {
+    server = app.listen(config.port, function () {
+      logger.info('Travelocity Brand Guide listening on port ' + config.port);
+    });
+  //});
+  // listen for shutdown
+  process.on('SIGINT', function () {
+    server.close();
+    if (db.db) {
+      db.db.close();
+      logger.debug('closing mongo connection');
+    }
+  })
 } catch (err) {
   logger.error(err);
 }
