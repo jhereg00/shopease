@@ -49,7 +49,9 @@ try {
       db.db.close();
       logger.debug('closing mongo connection');
     }
-  })
+  });
+
+  module.exports = app;
 } catch (err) {
   logger.error(err);
 }

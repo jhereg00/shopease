@@ -7,7 +7,6 @@ const bcrypt = require('bcrypt');
 
 // get app modules
 var db = require('../utilities/db');
-var UserController = require('../controllers/UserController');
 var User = require('../models/User');
 
 var userVals = {
@@ -20,7 +19,6 @@ describe('Users', function (done) {
 
   before(function (done) {
     db.collection('users').remove({},done);
-    db.collection('users').createIndex({ email: 1 }, { unique: true })
   });
 
   it("should add a new user to the database if it doesn't exist", function (done) {
