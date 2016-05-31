@@ -9,7 +9,7 @@ userCollection.createIndex({ email: 1 }, { unique: true });
 
 class User {
   constructor (values) {
-    if (!values.name || !values.email || !values.pwd) {
+    if (!values.email) {
       return null;
     }
     this.name = values.name;
@@ -31,11 +31,11 @@ class User {
   }
 
   save (callback) {
-    if (!this.values.name || !this.values.email || !this.values.pwd) {
-      callback("invalid data");
-    }
     var _this = this;
     if (!this._id) { // if it has _id, it came from the DB so update instead
+      if (!this.values.name || !this.values.email || !this.values.pwd) {
+        return callback(new Error("invalid data"), null);
+      }
       userCollection.insert(this.values, function (err, data) {
         if (data.insertedIds && data.insertedIds.length)
           _this.id = data.insertedIds[0];

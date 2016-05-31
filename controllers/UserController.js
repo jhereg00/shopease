@@ -50,5 +50,15 @@ router.post('/login', function (req, res) {
   });
 });
 
+router.post('/update', function (req, res, next) {
+  if (!req.user) {
+    res.statusCode = 401;
+    res.json({ success: false, error: 'could not verify user' });
+    return next();
+  }
+
+  
+});
+
 module.exports = UserController;
 module.exports.router = router;

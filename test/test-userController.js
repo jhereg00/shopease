@@ -15,6 +15,7 @@ var db = require('../utilities/db');
 var app = require('../index.js');
 const User = require('../models/User');
 
+var token;
 var userVals = {
   name: "Joey Test",
   email: "fake@email.test",
@@ -98,16 +99,37 @@ describe('UserController', function () {
       .end(function (err, res) {
         //expect(res).to.have.cookie('token');
         var data = JSON.parse(res.text);
-        var token = data.token;
+        token = data.token;
         // verify the token
         jwt.verify(token, config.tokenSecret, function (err, decoded) {
           expect(decoded.name).to.equal(userVals.name);
           expect(decoded.email).to.equal(userVals.email);
           expect(decoded.pwd).to.not.exist;
+          expect(decoded._id).to.exist;
           done();
         });
       });
   });
-  it("updates a user");
+  it("updates a user", function (done) {
+    chai.request(app)
+      .post('/api/users/update')
+      .send({
+        token: token,
+        name: 'Tina Fake'
+      })
+      .end(function (err, res) {
+        expect(err).to.be.undefined;
+        res.should.have.status(200);
+        var data = JSON.parse(res.text);
+        data.success.should.be.true;
+        data.token.should.exist;
+
+        User.getOne({ email: userVals.email }, function (err, user) {
+          user.should.exist;
+          expect(user.name).to.equal('Tina Fake');
+          done();
+        });
+      });
+  });
 
 })
