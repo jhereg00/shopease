@@ -15,6 +15,7 @@ const express = require('express');
 const app = express();
 const logger = require('./utilities/logger');
 const morgan = require('morgan');
+const bodyParser = require('body-parser');
 var db = require('./utilities/db');
 
 ///////////////////
@@ -26,11 +27,16 @@ const config = require('./utilities/config');
 // middleware and routes
 ///////////////////
 // logging
-app.use(morgan(config.env === 'development' ? 'dev' : 'combined',{ "stream": logger.stream }));
+if (config.env !== 'test')
+  app.use(morgan(config.env === 'development' ? 'dev' : 'combined',{ "stream": logger.stream }));
+// parse POST data
+app.use(bodyParser.json()); // for parsing application/json
+app.use(bodyParser.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
 // temp
 app.get('/', function (req, res) {
   res.send('Hello World');
 });
+app.use('/api/users/', require('./controllers/UserController').router);
 
 ///////////////////
 // start app
