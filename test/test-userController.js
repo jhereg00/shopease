@@ -2,6 +2,7 @@ process.env.NODE_ENV = 'test';
 
 const chai = require('chai');
 const should = chai.should();
+const expect = chai.expect;
 const chaiHttp = require('chai-http');
 const babel = require('babel-register');
 
@@ -55,8 +56,36 @@ describe('UserController', function () {
         done();
       });
   });
-  it("signs in an existing user and returns a token");
-  it("alerts on a failure to log in");
+  it("signs in an existing user and returns a token", function (done) {
+    chai.request(app)
+      .post('/api/users/login')
+      .send(userVals)
+      .end(function (err, res) {
+        (err === null).should.be.true;
+        res.should.have.status(200);
+        var data = JSON.parse(res.text);
+        data.success.should.be.true;
+        data.token.should.exist;
+        done();
+      });
+  });
+  it("alerts on a failure to log in", function (done) {
+    chai.request(app)
+      .post('/api/users/login')
+      .send({
+        email: userVals.email,
+        pwd: 'badPass'
+      })
+      .end(function (err, res) {
+        (err === null).should.be.false;
+        res.should.have.status(401);
+        var data = JSON.parse(res.text);
+        data.success.should.be.false;
+        expect(data.token).to.not.exist;
+        data.error.should.equal('invalid password');
+        done();
+      })
+  });
   it("updates a user");
   it("creates a token that doesn't include the password");
 
