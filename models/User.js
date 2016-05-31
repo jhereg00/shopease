@@ -2,16 +2,20 @@ var db = require('../utilities/db');
 const userCollection = db.collection('users');
 const config = require('../utilities/config');
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 
 // make sure emails are unique
 userCollection.createIndex({ email: 1 }, { unique: true });
 
 class User {
   constructor (values) {
+    if (!values.name || !values.email || !values.pwd) {
+      return null;
+    }
     this.name = values.name;
     this.email = values.email;
     this.pwd = values.pwd;
-    if (!/^\$[\d\w]{2}\$\d+\$.+/.test(this.pwd)) {
+    if (this.pwd && !/^\$[\d\w]{2}\$\d+\$.+/.test(this.pwd)) {
       this.pwd = bcrypt.hashSync(this.pwd, config.pwdSaltRounds);
     }
     this._id = values._id;
@@ -27,6 +31,9 @@ class User {
   }
 
   save (callback) {
+    if (!this.values.name || !this.values.email || !this.values.pwd) {
+      callback("invalid data");
+    }
     var _this = this;
     if (!this._id) { // if it has _id, it came from the DB so update instead
       userCollection.insert(this.values, function (err, data) {
@@ -44,6 +51,15 @@ class User {
   delete (callback) {
     userCollection.remove({ _id: this._id }, function (err, data) {
       callback(err, data);
+    });
+  }
+  getToken () {
+    return jwt.sign({
+      name: this.values.name,
+      email: this.values.email,
+      _id: this.values._id
+    }, config.tokenSecret, {
+      expiresIn: "7d"
     });
   }
   static getOne (query, callback) {

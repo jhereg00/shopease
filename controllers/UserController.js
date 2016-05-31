@@ -1,6 +1,7 @@
 const User = require('../models/User');
 const express = require('express');
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 var router = express.Router();
 
 class UserController {
@@ -11,28 +12,34 @@ class UserController {
   static create (values, callback) {
     return User.create(values, callback);
   }
+  static sendUser (req, res, user) {
+    var token = user.getToken();
+    res.cookie('token', token, { expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7) });
+    res.json({ success: true, token: token });
+  }
 }
 
 router.post('/create', function (req, res) {
   var u = new User(req.body);
-  u.save(function (err, data) {
+  u.save(function (err, user) {
     if (err)
       res.json({ success: false, error: err });
-    else
-      res.json({ success: true, token: 'badToken' });
+    else {
+      UserController.sendUser(req, res, u);
+    }
   });
 });
 
 router.post('/login', function (req, res) {
   var u = User.getOne({ email: req.body.email }, function (err, user) {
-    if (err) {
+    if (err || !user) {
       res.statusCode = 404;
-      res.json({ success: false, error: err });
+      res.json({ success: false, error: err || 'user not found' });
     }
     else {
       // check password
       if (bcrypt.compareSync(req.body.pwd, user.pwd)) {
-        res.json({ success: true, token: 'badToken' });
+        UserController.sendUser(req, res, user);
       }
       else {
         // bad password
@@ -41,7 +48,7 @@ router.post('/login', function (req, res) {
       }
     }
   });
-})
+});
 
 module.exports = UserController;
 module.exports.router = router;

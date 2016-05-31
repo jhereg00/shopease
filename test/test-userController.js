@@ -5,6 +5,8 @@ const should = chai.should();
 const expect = chai.expect;
 const chaiHttp = require('chai-http');
 const babel = require('babel-register');
+const jwt = require('jsonwebtoken');
+const config = require('../utilities/config');
 
 chai.use(chaiHttp);
 
@@ -86,7 +88,26 @@ describe('UserController', function () {
         done();
       })
   });
+  it("creates a token that doesn't include the password", function (done) {
+    chai.request(app)
+      .post('/api/users/login')
+      .send({
+        email: userVals.email,
+        pwd: userVals.pwd
+      })
+      .end(function (err, res) {
+        //expect(res).to.have.cookie('token');
+        var data = JSON.parse(res.text);
+        var token = data.token;
+        // verify the token
+        jwt.verify(token, config.tokenSecret, function (err, decoded) {
+          expect(decoded.name).to.equal(userVals.name);
+          expect(decoded.email).to.equal(userVals.email);
+          expect(decoded.pwd).to.not.exist;
+          done();
+        });
+      });
+  });
   it("updates a user");
-  it("creates a token that doesn't include the password");
 
 })

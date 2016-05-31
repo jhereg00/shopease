@@ -16,6 +16,7 @@ const app = express();
 const logger = require('./utilities/logger');
 const morgan = require('morgan');
 const bodyParser = require('body-parser');
+const cookieParser = require('cookie-parser');
 var db = require('./utilities/db');
 
 ///////////////////
@@ -32,6 +33,8 @@ if (config.env !== 'test')
 // parse POST data
 app.use(bodyParser.json()); // for parsing application/json
 app.use(bodyParser.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
+// cookies!
+app.use(cookieParser());
 // temp
 app.get('/', function (req, res) {
   res.send('Hello World');
