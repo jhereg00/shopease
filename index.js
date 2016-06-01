@@ -17,6 +17,8 @@ const logger = require('./utilities/logger');
 const morgan = require('morgan');
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
+
+const UserController = require('./controllers/UserController');
 var db = require('./utilities/db');
 
 ///////////////////
@@ -35,11 +37,14 @@ app.use(bodyParser.json()); // for parsing application/json
 app.use(bodyParser.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
 // cookies!
 app.use(cookieParser());
+// user token verification
+app.use(UserController.verifyToken)
 // temp
 app.get('/', function (req, res) {
+  console.log(req.user);
   res.send('Hello World');
 });
-app.use('/api/users/', require('./controllers/UserController').router);
+app.use('/api/users/', UserController.router);
 
 ///////////////////
 // start app

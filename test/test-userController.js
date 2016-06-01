@@ -7,6 +7,7 @@ const chaiHttp = require('chai-http');
 const babel = require('babel-register');
 const jwt = require('jsonwebtoken');
 const config = require('../utilities/config');
+const bcrypt = require('bcrypt');
 
 chai.use(chaiHttp);
 
@@ -115,10 +116,11 @@ describe('UserController', function () {
       .post('/api/users/update')
       .send({
         token: token,
-        name: 'Tina Fake'
+        name: 'Tina Fake',
+        pwd: 'newPass'
       })
       .end(function (err, res) {
-        expect(err).to.be.undefined;
+        expect(err).to.be.null;
         res.should.have.status(200);
         var data = JSON.parse(res.text);
         data.success.should.be.true;
@@ -127,6 +129,8 @@ describe('UserController', function () {
         User.getOne({ email: userVals.email }, function (err, user) {
           user.should.exist;
           expect(user.name).to.equal('Tina Fake');
+          //expect(user.pwd).to.not.be.null;
+          bcrypt.compareSync('newPass', user.pwd).should.equal(true);
           done();
         });
       });

@@ -1,4 +1,5 @@
 var db = require('../utilities/db');
+const ObjectID = require('mongodb').ObjectID;
 const userCollection = db.collection('users');
 const config = require('../utilities/config');
 const bcrypt = require('bcrypt');
@@ -15,19 +16,31 @@ class User {
     this.name = values.name;
     this.email = values.email;
     this.pwd = values.pwd;
-    if (this.pwd && !/^\$[\d\w]{2}\$\d+\$.+/.test(this.pwd)) {
-      this.pwd = bcrypt.hashSync(this.pwd, config.pwdSaltRounds);
-    }
     this._id = values._id;
   }
 
   get values () {
-    return {
-      name: this.name,
-      email: this.email,
-      pwd: this.pwd,
-      _id: this._id
+    if (this.pwd)
+      return {
+        name: this.name,
+        email: this.email,
+        pwd: this.pwd
+      }
+    else
+      return {
+        name: this.name,
+        email: this.email
+      }
+  }
+
+  set pwd (val) {
+    if (val && !/^\$[\d\w]{2}\$\d+\$.+/.test(val)) {
+      val = bcrypt.hashSync(val, config.pwdSaltRounds);
     }
+    this._pwd = val;
+  }
+  get pwd () {
+    return this._pwd;
   }
 
   save (callback) {
@@ -43,13 +56,15 @@ class User {
       });
     }
     else {
-      userCollection.update({ _id: this._id }, this.values, function (err, data) {
+      userCollection.update({ _id: new ObjectID(this._id) }, {
+        '$set' : this.values
+      }, function (err, data) {
         callback(err, data);
       });
     }
   }
   delete (callback) {
-    userCollection.remove({ _id: this._id }, function (err, data) {
+    userCollection.remove({ _id: new ObjectID(this._id) }, function (err, data) {
       callback(err, data);
     });
   }
@@ -57,7 +72,7 @@ class User {
     return jwt.sign({
       name: this.values.name,
       email: this.values.email,
-      _id: this.values._id
+      _id: this._id
     }, config.tokenSecret, {
       expiresIn: "7d"
     });
@@ -78,6 +93,13 @@ class User {
       });
       callback(err, users);
     });
+  }
+  static getFromToken (token) {
+    var userData = jwt.verify(token, config.tokenSecret);
+    if (userData && userData._id) {
+      return new User (userData);
+    }
+    return null;
   }
 }
 
